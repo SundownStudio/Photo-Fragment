@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">PhotoFragment</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="no_image_loaded">No image loaded</string>
+    <string name="couldnt_load_image">Could not load image</string>
+    <string name="example_dialog">Example Dialog</string>
+    <string name="proceed">Proceed</string>
+    <string name="close">Close</string>
+    <string name="add_photofragment">Add Fragment</string>
+    <string name="enter">Enter</string>
+    <string name="example">Example</string>
+    <string name="thanks">Thanks for checking out the demo!</string>
+</resources>
