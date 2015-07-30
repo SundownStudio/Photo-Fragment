@@ -19,9 +19,9 @@ import static com.sundown.photofragment.views.PhotoView.Option.*;
 public class PhotoView extends RelativeLayout implements View.OnClickListener {
 
     public interface PhotoViewListener{
-        void takePicture();
+        void startCamera();
+        void startGallery();
         void deletePicture(boolean clearFiles);
-        void loadPicture();
         void removeFragment();
     }
 
@@ -73,26 +73,18 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
     }
 
     public void setListener(PhotoViewListener listener) { this.listener = listener;}
-    public ImageView getLocationImageView(){
-        return locationImage;
-    }
-
     public void loadingImage(){
         drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
     }
+    public void reset(){ drawContainer(CLEAR_PROGRESS, NO_IMAGE_LOADED, NULL_BITMAP);}
 
-    public void reset(){
-        drawContainer(CLEAR_PROGRESS, NO_IMAGE_LOADED, NULL_BITMAP);
-    }
-
-    public void makePermanent(){removeFragment.setVisibility(INVISIBLE);}
 
     @Override
     public void onClick(View v) {
         switch(v.getId()){
             case R.id.takePicture:
                 drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
-                listener.takePicture();
+                listener.startCamera();
                 break;
 
             case R.id.deletePicture:
@@ -104,7 +96,7 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
             case R.id.loadPicture:
                 dispose();
                 drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
-                listener.loadPicture();
+                listener.startGallery();
                 break;
 
             case R.id.rotatePicture:
@@ -157,7 +149,6 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
         imageContainer.setBackgroundColor(getResources().getColor(R.color.colorAccent));
     }
 
-
     public void setBitmap(Bitmap bitmap){
         if (bitmap == null){
             drawContainer(CLEAR_PROGRESS, CANT_LOAD_IMAGE);
@@ -169,11 +160,7 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
         }
     }
 
-
-
-
     public void dispose(){
-        Log.m("PhotoView", " dispose");
         locationImage.setImageBitmap(null);
     }
 }

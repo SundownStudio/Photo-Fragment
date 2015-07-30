@@ -10,8 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/imageTitle"
-        android:background="@color/colorAccent"
         android:layout_margin="12dp"
+        android:background="@color/colorAccent"
         android:minHeight="200dp">
 
         <ImageView

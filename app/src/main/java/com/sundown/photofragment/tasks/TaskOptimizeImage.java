@@ -4,7 +4,7 @@ import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
 import com.sundown.photofragment.logging.Log;
-import com.sundown.photofragment.pojo.PhotoField;
+import com.sundown.photofragment.models.PhotoField;
 
 /**
  * Created by Sundown on 5/27/2015.
@@ -14,7 +14,6 @@ public class TaskOptimizeImage extends AsyncTask<String, Void, Boolean> {
     public interface TaskOptimizeImageListener {
         void onImageOptimized(Bitmap image);
     }
-
 
     private TaskOptimizeImageListener listener;
     private int width, height;
@@ -26,7 +25,7 @@ public class TaskOptimizeImage extends AsyncTask<String, Void, Boolean> {
         this.width = width;
         this.height = height;
         this.listener = listener;
-        Log.m("TaskLoadResizeImage: W: " + width + " H: " + height);
+        Log.m("TaskOptimizeImage: W: " + width + " H: " + height);
     }
 
 
@@ -66,13 +65,13 @@ public class TaskOptimizeImage extends AsyncTask<String, Void, Boolean> {
             listener.onImageOptimized(model.image);
 
         } else {
-            Log.m("TaskLoadBitmap", "Task broke, null bitmap");
+            Log.m("TaskOptimizeImage", "Task broke, null bitmap");
             listener.onImageOptimized(null);
             success = false;
         }
 
         if (!success){
-            Log.m("TaskLoadBitmap","Task cancelled");
+            Log.m("TaskOptimizeImage","Task cancelled");
             model.cleanupTemporaryFiles();
         }
     }

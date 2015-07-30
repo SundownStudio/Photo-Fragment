@@ -11,6 +11,9 @@
     <string name="close">Close</string>
     <string name="add_photofragment">Add Fragment</string>
     <string name="enter">Enter</string>
-    <string name="example">Example</string>
-    <string name="thanks">Thanks for checking out the demo!</string>
+    <string name="example">Nested Photo Fragments</string>
+    <string name="thanks">Thanks for checking out the demo!
+        \nwww.matthewgusella.com</string>
+    <string name="camera_not_supported">Camera not supported on your device</string>
+    <string name="gallery_not_supported">Gallery not supported</string>
 </resources>

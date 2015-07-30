@@ -1,4 +1,4 @@
-package com.sundown.photofragment.storage;
+package com.sundown.photofragment.utils;
 
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -22,13 +22,24 @@ import java.util.Date;
 /**
  * Created by Sundown on 5/12/2015.
  */
-public class PhotoManager {
+public class PhotoUtils {
 
     public static final String IMAGE_EXTENSION = ".jpg";
     public static final String THUMBNAIL_PREFIX = "THM_";
     public static final String IMAGE_PREFIX = "IMG_";
+    private static PhotoUtils instance;
+    public static int thumbnailDimens;
+    private SimpleDateFormat dateFormat;
+    private File storageDir;
+    private BitmapFactory.Options options;
 
-    private PhotoManager(){
+    public static PhotoUtils getInstance(){
+        if (instance == null)
+            instance = new PhotoUtils();
+        return instance;
+    }
+
+    private PhotoUtils(){
         thumbnailDimens =  (int) (PhotoFragmentApp.getContext().getResources().getDimension(R.dimen.thumbnail_image_size) / PhotoFragmentApp.getContext().getResources().getDisplayMetrics().density);
         dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
         storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -37,36 +48,9 @@ public class PhotoManager {
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
     }
 
-    private static PhotoManager instance;
-    public static int thumbnailDimens;
-    private SimpleDateFormat dateFormat;
-    private File storageDir;
-    private BitmapFactory.Options options;
-
-    public static PhotoManager getInstance(){ //todo: do we ever need to reinit the context?
-        if (instance == null)
-            instance = new PhotoManager();
-        return instance;
-    }
-
-    public Bitmap resizeThumbnail(Bitmap image) {
-        Bitmap resized = Bitmap.createScaledBitmap(image, thumbnailDimens, thumbnailDimens, true);
-        Log.m("New Picture specs - height: " + resized.getHeight() + " width: " + resized.getWidth() + " imageSize: " + thumbnailDimens);
-        return resized;
-    }
-
     public File createImageFile(String prefix, int id) throws IOException {
-        // Create an image file name
         String imageFileName = generateFileName(prefix, id);
-        Log.m("destination file: " + imageFileName);
-
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                IMAGE_EXTENSION, /* suffix */
-                storageDir      /* directory */
-        );
-
-        return image;
+        return File.createTempFile(imageFileName, IMAGE_EXTENSION, storageDir);
     }
 
     public String generateFileName(String prefix, int id){
@@ -74,38 +58,17 @@ public class PhotoManager {
     }
 
 
-    public final Bitmap getImageFromFile(String fileName){
-        return BitmapFactory.decodeFile(getFullPath(fileName), options);
-    }
-
-
-    public String getFullPath(String fileName){
-        return storageDir + "/" + fileName;
-    }
-
-    public boolean deleteImage(String fileName){
-        File file = new File(storageDir + "/" + fileName);
-        if (file.exists())
-            return file.delete();
-        return false;
-    }
-
-
     public Bitmap resizeImage(String path, int targetWidth, int targetHeight){
-
-        // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+
         bmOptions.inJustDecodeBounds = true; // avoids memory allocation, returning null for the bitmap object but setting outWidth, outHeight and outMimeType
         BitmapFactory.decodeFile(path, bmOptions);
 
         int scaleFactor = calculateInSampleSize(bmOptions, targetWidth, targetHeight); //better method, gets lower outputs than Math.min(photoW / targetWidth, photoH / targetHeight)
         Log.m("PHOTO", "Second scale factor: " + scaleFactor + " targetWidth: " + targetWidth + " targetHeight: " + targetHeight);
 
-        // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false; //we want the image this time..
         bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
-
         return BitmapFactory.decodeFile(path, bmOptions);
 
     }
@@ -121,7 +84,6 @@ public class PhotoManager {
         int inSampleSize = 1;
 
         if (height > reqHeight || width > reqWidth) {
-
             final int halfHeight = height / 2;
             final int halfWidth = width / 2;
 
@@ -170,10 +132,7 @@ public class PhotoManager {
 
     public String getPathFromGallery(Uri selectedImage){
         String[] filePathColumn = { MediaStore.Images.Media.DATA };
-
-        // Get the cursor
         Cursor cursor = PhotoFragmentApp.getContext().getContentResolver().query(selectedImage, filePathColumn, null, null, null);
-        // Move to first row
         cursor.moveToFirst();
 
         int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
@@ -186,42 +145,9 @@ public class PhotoManager {
 
     public void saveImage(File destinationFile, Bitmap image) throws IOException { //todo: handle lack of space issues
         FileOutputStream out = new FileOutputStream(destinationFile);
-        image.compress(Bitmap.CompressFormat.JPEG, 100, out); //todo: switched from png..
+        image.compress(Bitmap.CompressFormat.JPEG, 100, out);
         out.flush();
         out.close();
     }
-
-
-    /* use this if otherway is memory hit
-    public void copyFile(File src, File dst) throws IOException {
-        InputStream in = new FileInputStream(src);
-        OutputStream out = new FileOutputStream(dst);
-
-        // Transfer bytes from in to out
-        byte[] buf = new byte[1024];
-        int len;
-        while ((len = in.read(buf)) > 0) {
-            out.write(buf, 0, len);
-        }
-        in.close();
-        out.close();
-    }
-
-
-        public boolean oneOfOurImages(String path){
-        String parent = path.substring(0, path.lastIndexOf("/"));
-        String prefix = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("/") + 5);
-        if (parent.equals(storageDir.getAbsolutePath()) && prefix.equals(PhotoManager.IMAGE_PREFIX)){
-            return true;
-        }
-        return false;
-    }
-
-
-    public final Bitmap getImageFromPath(String fullpath){
-        return BitmapFactory.decodeFile(fullpath);
-    }
-
-    */
 
 }

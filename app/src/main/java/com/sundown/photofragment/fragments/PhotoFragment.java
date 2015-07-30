@@ -15,9 +15,9 @@ import android.view.ViewGroup;
 
 import com.sundown.photofragment.R;
 import com.sundown.photofragment.logging.Log;
-import com.sundown.photofragment.pojo.PhotoField;
-import com.sundown.photofragment.storage.PhotoManager;
-import com.sundown.photofragment.storage.PreferenceManager;
+import com.sundown.photofragment.models.PhotoField;
+import com.sundown.photofragment.utils.PhotoUtils;
+import com.sundown.photofragment.utils.PreferenceManager;
 import com.sundown.photofragment.tasks.TaskOptimizeImage;
 import com.sundown.photofragment.views.PhotoView;
 
@@ -26,53 +26,46 @@ import java.io.IOException;
 /**
  * Created by Sundown on 5/27/2015.
  *
- *  3 Major bugs with Android discovered today
- *  1) Nested Support Fragments cannot get onActivityResult
- *  2) Bitmaps in fragments not recycled because the imageview layer holds a ref to them on orientation change thanks to hardware accelleration introduced in 3.. have to nullify layer (see photoview)
- *  3) #2 wouldnt actually matter if we could retain nested fragments, but we cannot. So we need to load the bitmap each time unless you think of another way to save it on configuration change without
- *  sending it up to a retainable parent fragment.
+ *  3 issues with support library nested fragments discovered today
+ *  1) Bitmaps in nested fragments not recycled because the imageview layer holds a ref to them on orientation change thanks to hardware acceleration introduced in 3.. have to nullify layer (see photoview)
+ *  2) #1 wouldnt actually matter if we could retain nested fragments, but we cannot. So we need to load the bitmap each time unless you think of another way to save it on configuration change without
+ *  sending it up to a retainable parent fragment cache.
+ *  3) because nested fragments are not retainable, they do not get their onActivityResult called directly by OS
  */
 public class PhotoFragment extends Fragment implements
         PhotoView.PhotoViewListener, TaskOptimizeImage.TaskOptimizeImageListener {
 
     public interface PhotoFragmentListener{
-        void deleteImage(String imageName, String thumbName);
+        void deleteImage(String imageName, String thumbName); //i like to keep my DB calls all in one place (main activity or first level of frags)
         void removePhotoFragment(int id);
     }
 
     private static final int ACTIVITY_CAMERA = 10;
     private static final int ACTIVITY_GALLERY = 20;
-    private static final String FRAGMENT_ID = "FRAGMENT_ID";
+    public static final String FRAGMENT_ID = "FRAGMENT_ID";
     private PreferenceManager preferenceManager;
     private PhotoView view;
     private PhotoField model;
     private PhotoFragmentListener listener;
     private TaskOptimizeImage taskOptimizeImage;
     private int id;
-
-
-    public void setListenerAndImageData(int id, PhotoFragmentListener listener, PhotoField photoField, int width, int height){
-        this.id = id;
-        this.listener = listener;
-        model = (photoField != null) ? photoField : new PhotoField(id, false);
-        this.width = width;
-        this.height = height;
-
-        String imageName = model.imageName;
-        if (imageName != null && imageName.length() > 0 && model.image == null){
-            //model.image = DatabaseCommunicator.getInstance().loadBitmap(documentId, imageName);
-        }
-
-    }
-
     private int height, width;
 
     public static PhotoFragment newInstance(){
         return new PhotoFragment();
     }
 
+    public void setListenerAndImageData(int id, PhotoFragmentListener listener, PhotoField photoField, int width, int height){
+        this.id = id;
+        this.listener = listener;
+        model = (photoField != null) ? photoField : new PhotoField(id);
+        this.width = width;
+        this.height = height;
+        //todo set model.image to a default or saved image here if you need to
 
+    }
 
+    /* Lifecycle */
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -89,32 +82,27 @@ public class PhotoFragment extends Fragment implements
         try {
             model.loadExistingTempFiles();
             loadImage();
-            if (model.permanent)
-                view.makePermanent();
         } catch (Exception e){
             Log.e(e);
         }
     }
 
 
-
     @Override
     public void onDestroyView() {
-        Log.m("PhotoFragment", "onDestroyView");
         if (taskOptimizeImage != null && taskOptimizeImage.getStatus() != AsyncTask.Status.FINISHED) {
             taskOptimizeImage.cancel(true);
             Log.m("PhotoFragment", "task cancelled!");
         }
-
-
-        view.dispose();
         taskOptimizeImage = null;
-
+        view.dispose();
         super.onDestroyView();
     }
 
+    /* View (PhotoView) Button Presses */
+
     @Override
-    public void takePicture() {
+    public void startCamera() {
         PackageManager pm = getActivity().getPackageManager();
         Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         boolean deviceHasCameraFlag = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
@@ -133,27 +121,26 @@ public class PhotoFragment extends Fragment implements
                 Log.e(e);
             }
         } else {
-            Log.Toast(getActivity(), "Camera not supported on your device", Log.TOAST_SHORT); //todo
+            Log.Toast(getActivity(), getString(R.string.camera_not_supported), Log.TOAST_SHORT);
         }
     }
 
-
     @Override
-    public void deletePicture(boolean clearFiles) {
-        model.recycle(clearFiles);
-        listener.deleteImage(model.imageName, model.thumbName);
-    }
-
-    @Override
-    public void loadPicture() {
+    public void startGallery() {
         try {
             model.generateTemporaryFiles();
             saveFragmentIdForActivityResult();
             Intent galleryIntent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             getActivity().startActivityForResult(galleryIntent, ACTIVITY_GALLERY);
         } catch (IOException e) {
-            Log.e(e); //todo
+            Log.Toast(getActivity(), getString(R.string.gallery_not_supported), Log.TOAST_SHORT);
         }
+    }
+
+    @Override
+    public void deletePicture(boolean clearFiles) {
+        model.recycle(clearFiles);
+        listener.deleteImage(model.imageName, model.thumbName);
     }
 
     @Override
@@ -163,7 +150,7 @@ public class PhotoFragment extends Fragment implements
     }
 
 
-    //Yippee.. due to a bug in the support library, nested fragments don't get this called.. have to manually direct result from activity
+    //due to a bug in the support library, nested fragments don't get this called.. have to manually direct result from activity
     //WARNING: THIS GETS CALLED BEFORE ONRESUME!!! DONT USE ANY PART OF LAYOUT THAT ISNT YET INFLATED AND GIVEN DIMENSION
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -186,21 +173,17 @@ public class PhotoFragment extends Fragment implements
 
                 case ACTIVITY_GALLERY:
                     Uri uri = data.getData();
-                    taskOptimizeImage.execute(PhotoManager.getInstance().getPathFromGallery(uri));
+                    taskOptimizeImage.execute(PhotoUtils.getInstance().getPathFromGallery(uri));
                     break;
             }
         }
     }
 
 
-    @Override
+    @Override //TaskOptimizeImage has completed
     public void onImageOptimized(Bitmap image) {
-        Log.m("PhotoFragment", "onImageOptimized");
         view.setBitmap(image);
     }
-
-
-
 
     private void saveFragmentIdForActivityResult(){
         preferenceManager = PreferenceManager.getInstance();
@@ -208,28 +191,17 @@ public class PhotoFragment extends Fragment implements
         preferenceManager.apply();
     }
 
-    public PhotoField getModel(){
-        return model;
-    }
-
-
-    //todo move this to asynctask..
     private void loadImage(){
-
-        Log.m("PhotoFragment", "loadImage");
-        view.loadingImage();
+        view.loadingImage(); //start spinner on view
 
         if (model.image == null){
             model.loadImageFromFile();
         }
-
-        if (model.image != null) {
+        if (model.image != null) { //set image if loaded
             view.setBitmap(model.image);
-        } else {
-            Log.m("PhotoFragment", "reset");
+        } else { //otherwise reset view
             view.reset();
         }
-
     }
 
 }

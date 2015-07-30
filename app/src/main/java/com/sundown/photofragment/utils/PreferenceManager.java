@@ -1,4 +1,4 @@
-package com.sundown.photofragment.storage;
+package com.sundown.photofragment.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -16,13 +16,6 @@ public final class PreferenceManager {
     private final SharedPreferences prefs;
     private final SharedPreferences.Editor editor;
 
-    private PreferenceManager(Context context){
-        prefs = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
-        editor = prefs.edit();
-    }
-
-
-
     public static synchronized PreferenceManager getInstance() {
         if (instance == null) {
             instance = new PreferenceManager(PhotoFragmentApp.getContext());
@@ -30,16 +23,15 @@ public final class PreferenceManager {
         return instance;
     }
 
+    private PreferenceManager(Context context){
+        prefs = context.getSharedPreferences(PREF_FILE_NAME, Context.MODE_PRIVATE);
+        editor = prefs.edit();
+    }
 
     public void putString(final String key, final String value){editor.putString(key, value);}
-
-
     public String getString(final String key){return prefs.getString(key, "");}
-
     public void putInt(final String key, final int value){editor.putInt(key, value);}
-
     public int getInt(final String key){return prefs.getInt(key, 0);}
-
     public void remove(final String key){
         editor.remove(key);
     }

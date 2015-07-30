@@ -1,12 +1,12 @@
-package com.sundown.photofragment.pojo;
+package com.sundown.photofragment.models;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 
 import com.sundown.photofragment.logging.Log;
-import com.sundown.photofragment.storage.PhotoManager;
-import com.sundown.photofragment.storage.PreferenceManager;
+import com.sundown.photofragment.utils.PhotoUtils;
+import com.sundown.photofragment.utils.PreferenceManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,26 +24,26 @@ public class PhotoField extends Field {
     private static final String THUMB = "thumb";
     private static final int FIELD_PIC = 8;
 
-    private PhotoManager photoManager;
+    private PhotoUtils photoUtils;
     private PreferenceManager preferenceManager;
     public File imageTempFile, thumbTempFile;
     public String imageName, thumbName;
     public Bitmap image, thumb;
 
-    public PhotoField(boolean permanent){
-        super(0, "Photo", FIELD_PIC, permanent);
+    public PhotoField(){
+        super(0, FIELD_PIC);
         init();
     }
 
 
-    public PhotoField(int id, boolean permanent){
-        super(id, "Photo", FIELD_PIC, permanent);
+    public PhotoField(int id){
+        super(id, FIELD_PIC);
         init();
     }
 
     private void init(){
         preferenceManager = PreferenceManager.getInstance();
-        photoManager = PhotoManager.getInstance();
+        photoUtils = PhotoUtils.getInstance();
     }
 
 
@@ -90,12 +90,6 @@ public class PhotoField extends Field {
         preferenceManager.commit();
     }
 
-
-    public void setImage(Bitmap defaultImage){
-        this.image = defaultImage;
-    }
-
-
     public void loadImageFromFile(){
         if (imageTempFile != null){ //load it from file if it exists..
             image = BitmapFactory.decodeFile(imageTempFile.getAbsolutePath());
@@ -107,9 +101,9 @@ public class PhotoField extends Field {
 
     public void generateTemporaryFiles() throws IOException {
         if (imageTempFile == null)
-            imageTempFile = photoManager.createImageFile(photoManager.IMAGE_PREFIX, id);
+            imageTempFile = photoUtils.createImageFile(photoUtils.IMAGE_PREFIX, id);
         if (thumbTempFile == null)
-            thumbTempFile = photoManager.createImageFile(photoManager.THUMBNAIL_PREFIX, id);
+            thumbTempFile = photoUtils.createImageFile(photoUtils.THUMBNAIL_PREFIX, id);
     }
 
     public void loadExistingTempFiles(){
@@ -129,21 +123,21 @@ public class PhotoField extends Field {
             selectedImagePath = imageTempFile.getAbsolutePath();
 
         //resizing image removes its Exif, so to get the orientation we need to process that first..
-        int rotate = photoManager.imageOrientationValidator(selectedImagePath);
+        int rotate = photoUtils.imageOrientationValidator(selectedImagePath);
 
         //now resize image to fit container because we dont need all that extra memory for big image
-        image = photoManager.resizeImage(selectedImagePath, width, height);
-        image = photoManager.rotateImage(image, rotate);
+        image = photoUtils.resizeImage(selectedImagePath, width, height);
+        image = photoUtils.rotateImage(image, rotate);
         Log.m("Photo: bitmap resized! W: " + width + " H: " + height);
     }
 
     public void extractThumb(){
-        thumb = ThumbnailUtils.extractThumbnail(image, photoManager.thumbnailDimens, photoManager.thumbnailDimens);
+        thumb = ThumbnailUtils.extractThumbnail(image, photoUtils.thumbnailDimens, photoUtils.thumbnailDimens);
     }
 
     public void saveContentsToFiles() throws IOException {
-        photoManager.saveImage(imageTempFile, image);
-        photoManager.saveImage(thumbTempFile, thumb);
+        photoUtils.saveImage(imageTempFile, image);
+        photoUtils.saveImage(thumbTempFile, thumb);
 
         if (imageTempFile != null){
             imageName = imageTempFile.getName();
@@ -155,9 +149,6 @@ public class PhotoField extends Field {
         }
         preferenceManager.commit();
     }
-
-
-
 }
 
 

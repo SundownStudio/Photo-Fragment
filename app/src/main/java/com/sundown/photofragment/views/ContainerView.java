@@ -12,7 +12,7 @@ import com.sundown.photofragment.R;
 /**
  * Created by Sundown on 7/27/2015.
  */
-public class ExampleView extends LinearLayout implements View.OnClickListener {
+public class ContainerView extends LinearLayout implements View.OnClickListener {
 
     public interface ExampleViewListener{
         void cancelPressed();
@@ -20,24 +20,17 @@ public class ExampleView extends LinearLayout implements View.OnClickListener {
         void enterPressed();
     }
 
-
     private ExampleViewListener listener;
     public void setListener(ExampleViewListener listener){ this.listener = listener;}
-
     private LinearLayout container;
-    public LinearLayout getContainer(){return container;}
-
     private Button cancel, enter, add;
 
-    public ExampleView(Context context, AttributeSet attrs) { super(context, attrs);}
+    public ContainerView(Context context, AttributeSet attrs) { super(context, attrs);}
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-
-
         container = (LinearLayout) findViewById(R.id.container);
-
         cancel = (Button) findViewById(R.id.cancel);
         enter = (Button) findViewById(R.id.enter);
         add = (Button) findViewById(R.id.add);
