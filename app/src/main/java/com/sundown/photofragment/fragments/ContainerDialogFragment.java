@@ -156,7 +156,7 @@ public class ContainerDialogFragment extends DialogFragment implements Container
 
         //add model to layout
         for (Integer k: keys){
-            addToLayout(k, model.get(k));
+            addToLayout(k, model.getField(k));
         }
 
         //and update view
@@ -210,6 +210,6 @@ public class ContainerDialogFragment extends DialogFragment implements Container
     public void removePhotoFragment(int id) {
         PhotoFragment photoFragment = photoFragments.remove(id);
         fm.beginTransaction().remove(photoFragment).commit();
-        model.remove(id);
+        model.removeField(id);
     }
 }

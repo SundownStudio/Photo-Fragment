@@ -21,18 +21,15 @@ public class Photos {
         Object[] keys = getKeys();
         int size = keys.length;
         int lastKey = 0;
-        if (size > 0)
-            lastKey = (int) keys[size-1];
+        if (size > 0) lastKey = (int) keys[size-1];
         return ++lastKey;
     }
 
-    public void remove(int id){
+    public void removeField(int id){
         fields.remove(id);
     }
 
-    public Field get(Integer id){
-        return fields.get(id);
-    }
+    public Field getField(Integer id){ return fields.get(id);}
 
     public int addField(Field field){
         int nextKey = getNextKey();
