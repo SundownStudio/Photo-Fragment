@@ -33,6 +33,7 @@ public class Photos {
 
     public int addField(Field field){
         int nextKey = getNextKey();
+        field.setId(nextKey);
         fields.put(nextKey, field);
         return nextKey;
     }

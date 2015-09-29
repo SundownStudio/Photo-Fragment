@@ -16,6 +16,8 @@ import com.sundown.photofragment.models.Photos;
 import com.sundown.photofragment.pojo.ActivityResult;
 import com.sundown.photofragment.models.Field;
 import com.sundown.photofragment.models.PhotoField;
+import com.sundown.photofragment.utils.FileManager;
+import com.sundown.photofragment.utils.PhotoUtils;
 import com.sundown.photofragment.utils.PreferenceManager;
 import com.sundown.photofragment.views.ContainerView;
 
@@ -52,9 +54,7 @@ public class ContainerDialogFragment extends DialogFragment implements Container
         return fragment;
     }
 
-
     public ContainerDialogFragment(){} //leave empty pls
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,7 +80,6 @@ public class ContainerDialogFragment extends DialogFragment implements Container
             }
         });
         return view;
-
     }
 
     @Override
@@ -164,7 +163,6 @@ public class ContainerDialogFragment extends DialogFragment implements Container
     }
 
     private void addToLayout(int id, Field field){
-        field.setId(id);
         addPhotoFragment(id, field);
     }
 
@@ -181,25 +179,18 @@ public class ContainerDialogFragment extends DialogFragment implements Container
         layout.addView(rl);
 
         fm.beginTransaction().replace(rl.getId(), photoFragment).commit();
-
-
     }
 
     @Override //user closed dialog
-    public void cancelPressed() { dismiss();}
+    public void closePressed() { dismiss();}
 
     @Override //add a new photofragment to the layout
     public void addPhotoFragmentPressed() {
-        PhotoField field = new PhotoField();
+        PhotoField field = new PhotoField(PhotoUtils.getInstance(), FileManager.getInstance(), PreferenceManager.getInstance());
         int id = model.addField(field);
         addToLayout(id, field);
     }
 
-    @Override //user pressed enter
-    public void enterPressed() {
-        //todo here you could save the pics in your model to your db..
-        dismiss();
-    }
 
     @Override
     public void deleteImage(String imageName, String thumbName) {
@@ -207,7 +198,7 @@ public class ContainerDialogFragment extends DialogFragment implements Container
     }
 
     @Override //remove this photoFragment from the layout..
-    public void removePhotoFragment(int id) {
+    public void deletePhotoFragment(int id) {
         PhotoFragment photoFragment = photoFragments.remove(id);
         fm.beginTransaction().remove(photoFragment).commit();
         model.removeField(id);

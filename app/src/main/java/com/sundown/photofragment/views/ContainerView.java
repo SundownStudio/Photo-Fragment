@@ -15,15 +15,14 @@ import com.sundown.photofragment.R;
 public class ContainerView extends LinearLayout implements View.OnClickListener {
 
     public interface ExampleViewListener{
-        void cancelPressed();
+        void closePressed();
         void addPhotoFragmentPressed();
-        void enterPressed();
     }
 
     private ExampleViewListener listener;
     public void setListener(ExampleViewListener listener){ this.listener = listener;}
     private LinearLayout container;
-    private Button cancel, enter, add;
+    private Button close, add;
 
     public ContainerView(Context context, AttributeSet attrs) { super(context, attrs);}
 
@@ -31,11 +30,9 @@ public class ContainerView extends LinearLayout implements View.OnClickListener 
     protected void onFinishInflate() {
         super.onFinishInflate();
         container = (LinearLayout) findViewById(R.id.container);
-        cancel = (Button) findViewById(R.id.cancel);
-        enter = (Button) findViewById(R.id.enter);
+        close = (Button) findViewById(R.id.close);
         add = (Button) findViewById(R.id.add);
-        cancel.setOnClickListener(this);
-        enter.setOnClickListener(this);
+        close.setOnClickListener(this);
         add.setOnClickListener(this);
     }
 
@@ -43,14 +40,11 @@ public class ContainerView extends LinearLayout implements View.OnClickListener 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.cancel:
-                listener.cancelPressed();
+            case R.id.close:
+                listener.closePressed();
                 break;
             case R.id.add:
                 listener.addPhotoFragmentPressed();
-                break;
-            case R.id.enter:
-                listener.enterPressed();
                 break;
         }
     }

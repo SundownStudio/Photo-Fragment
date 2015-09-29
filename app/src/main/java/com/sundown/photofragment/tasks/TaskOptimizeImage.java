@@ -15,9 +15,10 @@ public class TaskOptimizeImage extends AsyncTask<String, Void, Boolean> {
         void onImageOptimized(Bitmap image);
     }
 
+
     private TaskOptimizeImageListener listener;
     private int width, height;
-    public PhotoField model;
+    private PhotoField model;
 
 
     public TaskOptimizeImage(PhotoField model, int width, int height, TaskOptimizeImageListener listener){
@@ -25,7 +26,6 @@ public class TaskOptimizeImage extends AsyncTask<String, Void, Boolean> {
         this.width = width;
         this.height = height;
         this.listener = listener;
-        Log.m("TaskOptimizeImage: W: " + width + " H: " + height);
     }
 
 
@@ -56,22 +56,10 @@ public class TaskOptimizeImage extends AsyncTask<String, Void, Boolean> {
     protected void onPostExecute(Boolean success) {
         super.onPostExecute(success);
 
-        //todo optimize the logic here at some point..
-        if (isCancelled()) {
-            success = false;
-        }
+        Bitmap imageBitmap = model.getImageBitmap();
+        listener.onImageOptimized(imageBitmap);
 
-        if (model.image != null) {
-            listener.onImageOptimized(model.image);
-
-        } else {
-            Log.m("TaskOptimizeImage", "Task broke, null bitmap");
-            listener.onImageOptimized(null);
-            success = false;
-        }
-
-        if (!success){
-            Log.m("TaskOptimizeImage","Task cancelled");
+        if (isCancelled() || imageBitmap == null || !success) {
             model.cleanupTemporaryFiles();
         }
     }

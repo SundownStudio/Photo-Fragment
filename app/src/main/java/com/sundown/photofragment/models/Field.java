@@ -8,27 +8,32 @@ import java.util.Map;
  */
 public abstract class Field implements PropertiesHandler {
 
-    public static final String FIELD_TYPE = "type";
-    public int id;
-    public void setId(int id){ this.id = id;}
-    public int type;
+    private static final String FIELD_TYPE = "type";
+
+    /** used for view tagging */
+    private int id;
+
+    public int getId() { return id; }
+
+    public void setId(int id) { this.id = id; }
+
+    private FieldType type;
 
 
-    public Field(int id, int type){
-        this.id = id;
+    public Field(FieldType type) {
         this.type = type;
     }
 
     @Override
     public Map<String, Object> getProperties() {
         Map<String, Object> properties = new HashMap();
-        properties.put(FIELD_TYPE, type);
+        properties.put(FIELD_TYPE, type.name());
         return properties;
     }
 
     @Override
     public Field setProperties(Map properties) {
-        type = (Integer) properties.get(FIELD_TYPE);
+        type = FieldType.valueOf(properties.get(FIELD_TYPE).toString());
         return this;
     }
 }

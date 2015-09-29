@@ -81,7 +81,6 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
         drawContainer(CLEAR_PROGRESS, NO_IMAGE_LOADED, NULL_BITMAP);
     }
 
-    public void makePermanent(){removeFragment.setVisibility(INVISIBLE);}
 
     @Override
     public void onClick(View v) {
@@ -173,16 +172,4 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
         locationImage.setImageBitmap(null);
     }
 
-    public void disableAllButtons(){
-        takePicture.setOnClickListener(null);
-        deletePicture.setOnClickListener(null);
-        loadPicture.setOnClickListener(null);
-        rotatePicture.setOnClickListener(null);
-        removeFragment.setOnClickListener(null);
-        takePicture.setVisibility(GONE);
-        deletePicture.setVisibility(GONE);
-        loadPicture.setVisibility(GONE);
-        rotatePicture.setVisibility(GONE);
-        removeFragment.setVisibility(GONE);
-    }
 }
