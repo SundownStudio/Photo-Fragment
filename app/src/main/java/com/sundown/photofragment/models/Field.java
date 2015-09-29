@@ -1,7 +1,5 @@
 package com.sundown.photofragment.models;
 
-import com.sundown.photofragment.interfaces.PropertiesHandler;
-
 import java.util.HashMap;
 import java.util.Map;
 

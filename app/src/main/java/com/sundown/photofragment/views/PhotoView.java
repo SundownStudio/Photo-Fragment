@@ -11,20 +11,25 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.sundown.photofragment.R;
-import com.sundown.photofragment.logging.Log;
-import static com.sundown.photofragment.views.PhotoView.Option.*;
+
+import static com.sundown.photofragment.views.PhotoView.Option.CANT_LOAD_IMAGE;
+import static com.sundown.photofragment.views.PhotoView.Option.CLEAR_CONTAINER;
+import static com.sundown.photofragment.views.PhotoView.Option.CLEAR_PROGRESS;
+import static com.sundown.photofragment.views.PhotoView.Option.NO_IMAGE_LOADED;
+import static com.sundown.photofragment.views.PhotoView.Option.NULL_BITMAP;
+import static com.sundown.photofragment.views.PhotoView.Option.SHOW_PROGRESS;
 /**
  * Created by Sundown on 5/21/2015.
  */
 public class PhotoView extends RelativeLayout implements View.OnClickListener {
 
     public interface PhotoViewListener{
-        void startCamera();
-        void startGallery();
+        void takePicture();
         void deletePicture(boolean clearFiles);
-        void removeFragment();
+        void loadPicture();
+        void rotatePicture();
+        void deleteFragment();
     }
-
 
     private PhotoViewListener listener;
     private ImageView locationImage;
@@ -38,25 +43,19 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
         CANT_LOAD_IMAGE, CLEAR_CONTAINER, NULL_BITMAP
     }
 
-    public PhotoView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        Log.m("PhotoView", " inside constructor ");
-    }
+    public PhotoView(Context context, AttributeSet attrs) {super(context, attrs);}
 
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        Log.m("PhotoView", " onFinishInflate");
         setup();
     }
 
     public void setup(){
-        Log.m("PhotoView", " setup");
 
-        //setTag(PHOTO_TAG);
         noImageLoadedText = (TextView) findViewById(R.id.noImageLoadedText);
         locationImage = (ImageView) findViewById(R.id.locationImage);
-        locationImage.setLayerType(View.LAYER_TYPE_SOFTWARE, null); //TADA.. disable hardware acceleration bitmap views so they actually get cleared when you recycle.. if you cant retain instance which we cant in nested frag..
+        locationImage.setLayerType(LAYER_TYPE_SOFTWARE, null); //TADA.. disable hardware acceleration bitmap views so they actually get cleared when you recycle.. if you cant retain instance which we cant in nested frag..
         //this affects SDKs after 3.0 all differently.. unbelievable how there is no documentation on clearing bitmaps in nested fragments on configuration changes..
         progressBar = (ProgressBar) findViewById(R.id.imgProgress);
         imageContainer = (RelativeLayout) findViewById(R.id.imageContainer);
@@ -73,18 +72,23 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
     }
 
     public void setListener(PhotoViewListener listener) { this.listener = listener;}
+
     public void loadingImage(){
         drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
     }
-    public void reset(){ drawContainer(CLEAR_PROGRESS, NO_IMAGE_LOADED, NULL_BITMAP);}
 
+    public void reset(){
+        drawContainer(CLEAR_PROGRESS, NO_IMAGE_LOADED, NULL_BITMAP);
+    }
+
+    public void makePermanent(){removeFragment.setVisibility(INVISIBLE);}
 
     @Override
     public void onClick(View v) {
         switch(v.getId()){
             case R.id.takePicture:
                 drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
-                listener.startCamera();
+                listener.takePicture();
                 break;
 
             case R.id.deletePicture:
@@ -96,14 +100,19 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
             case R.id.loadPicture:
                 dispose();
                 drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
-                listener.startGallery();
+                listener.loadPicture();
                 break;
 
             case R.id.rotatePicture:
+                if (locationImage.getDrawable() != null) {
+                    dispose();
+                    drawContainer(SHOW_PROGRESS, CLEAR_CONTAINER);
+                    listener.rotatePicture();
+                }
                 break;
 
             case R.id.removeFragment:
-                listener.removeFragment();
+                listener.deleteFragment();
                 break;
 
         }
@@ -115,11 +124,11 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
         for (Option x : options) {
             switch (x) {
                 case SHOW_PROGRESS:{
-                    progressBar.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(VISIBLE);
                     break;}
 
                 case CLEAR_PROGRESS:{
-                    progressBar.setVisibility(View.GONE);
+                    progressBar.setVisibility(GONE);
                     break;}
 
                 case NO_IMAGE_LOADED:{
@@ -132,7 +141,7 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
 
                 case CLEAR_CONTAINER:{
                     imageContainer.setBackgroundColor(getResources().getColor(R.color.dialogBackground));
-                    noImageLoadedText.setVisibility(View.GONE);
+                    noImageLoadedText.setVisibility(GONE);
                     break;}
 
                 case NULL_BITMAP:{
@@ -145,9 +154,10 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
 
     private void resetContainer(String text){
         noImageLoadedText.setText(text);
-        noImageLoadedText.setVisibility(View.VISIBLE);
+        noImageLoadedText.setVisibility(VISIBLE);
         imageContainer.setBackgroundColor(getResources().getColor(R.color.colorAccent));
     }
+
 
     public void setBitmap(Bitmap bitmap){
         if (bitmap == null){
@@ -156,11 +166,23 @@ public class PhotoView extends RelativeLayout implements View.OnClickListener {
             drawContainer(CLEAR_PROGRESS, CLEAR_CONTAINER);
             locationImage.setImageBitmap(bitmap);
             imageContainer.bringToFront();
-            Log.m("PhotoView", " setBitmap Image size: W:" + bitmap.getWidth() + " H:" + bitmap.getHeight());
         }
     }
 
     public void dispose(){
         locationImage.setImageBitmap(null);
+    }
+
+    public void disableAllButtons(){
+        takePicture.setOnClickListener(null);
+        deletePicture.setOnClickListener(null);
+        loadPicture.setOnClickListener(null);
+        rotatePicture.setOnClickListener(null);
+        removeFragment.setOnClickListener(null);
+        takePicture.setVisibility(GONE);
+        deletePicture.setVisibility(GONE);
+        loadPicture.setVisibility(GONE);
+        rotatePicture.setVisibility(GONE);
+        removeFragment.setVisibility(GONE);
     }
 }
